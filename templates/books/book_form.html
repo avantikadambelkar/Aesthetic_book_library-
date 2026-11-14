@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} • AuraFolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="max-w-900 mx-auto mb-4">
+        <a href="{% if action == 'edit' %}{% url 'book_detail' pk=book.pk %}{% else %}{% url 'library' %}{% endif %}" class="small text-muted text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back to {% if action == 'edit' %}Tome Details{% else %}Library{% endif %}
+        </a>
+        <h1 class="display-6 fw-bold mt-2 font-serif">{{ page_title }}</h1>
+        <p class="text-muted small">Record and preserve the bibliographic essence of this literary work.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 p-md-5 max-w-900 mx-auto" style="border-radius: var(--radius-xl); background-color: #FFFFFF;">
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="row g-4">
+                <!-- Left Preview Column -->
+                <div class="col-lg-4 text-center">
+                    <label class="form-label fw-bold small text-muted text-uppercase tracking-wider">Cover Visualizer</label>
+                    <div class="cover-preview-wrapper mb-3 shadow-sm">
+                        <img id="cover-preview-img" src="{% if book %}{{ book.cover }}{% endif %}" alt="Cover Preview" class="{% if not book %}d-none{% endif %}">
+                        <div id="cover-preview-placeholder" class="text-center p-3 text-muted {% if book %}d-none{% endif %}">
+                            <i class="bi bi-image fs-1 d-block mb-1 text-muted opacity-50"></i>
+                            <span class="small">Cover preview will appear here upon URL or file input</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-3 small text-muted text-start border" style="background-color: var(--bg-card-subtle);">
+                        <i class="bi bi-lightbulb text-warning me-1"></i>
+                        <strong>Aesthetic Tip:</strong> You can paste an image URL from Unsplash or Goodreads, or upload a cover from your device.
+                    </div>
+                </div>
+
+                <!-- Right Form Fields Column -->
+                <div class="col-lg-8">
+                    <!-- Title & Author -->
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold small">Tome Title <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.author.id_for_label }}" class="form-label fw-semibold small">Author <span class="text-danger">*</span></label>
+                        {{ form.author }}
+                        {% if form.author.errors %}<div class="text-danger small mt-1">{{ form.author.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Genre & Reading Status -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.genre.id_for_label }}" class="form-label fw-semibold small">Genre & Category</label>
+                            {{ form.genre }}
+                            {% if form.genre.errors %}<div class="text-danger small mt-1">{{ form.genre.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.reading_status.id_for_label }}" class="form-label fw-semibold small">Reading Status</label>
+                            {{ form.reading_status }}
+                            {% if form.reading_status.errors %}<div class="text-danger small mt-1">{{ form.reading_status.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Rating & Aesthetic Tag -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.rating.id_for_label }}" class="form-label fw-semibold small">Rating / Resonance</label>
+                            {{ form.rating }}
+                            {% if form.rating.errors %}<div class="text-danger small mt-1">{{ form.rating.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.aesthetic_tag.id_for_label }}" class="form-label fw-semibold small">Aesthetic Tag / Mood</label>
+                            {{ form.aesthetic_tag }}
+                            {% if form.aesthetic_tag.errors %}<div class="text-danger small mt-1">{{ form.aesthetic_tag.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Cover URL & Upload -->
+                    <div class="mb-3">
+                        <label for="{{ form.cover_url.id_for_label }}" class="form-label fw-semibold small">Cover Image URL (Web link)</label>
+                        {{ form.cover_url }}
+                        <div class="form-text small text-muted">Paste an Unsplash, OpenLibrary, or direct image link.</div>
+                        {% if form.cover_url.errors %}<div class="text-danger small mt-1">{{ form.cover_url.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.cover_image.id_for_label }}" class="form-label fw-semibold small">Or Upload Cover File</label>
+                        {{ form.cover_image }}
+                        {% if form.cover_image.errors %}<div class="text-danger small mt-1">{{ form.cover_image.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Meta: Year, Pages, Language, ISBN -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-md-3">
+                            <label for="{{ form.publication_year.id_for_label }}" class="form-label fw-semibold small">Year</label>
+                            {{ form.publication_year }}
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="{{ form.pages.id_for_label }}" class="form-label fw-semibold small">Pages</label>
+                            {{ form.pages }}
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="{{ form.language.id_for_label }}" class="form-label fw-semibold small">Language</label>
+                            {{ form.language }}
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="{{ form.isbn.id_for_label }}" class="form-label fw-semibold small">ISBN</label>
+                            {{ form.isbn }}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold small">Synopsis & Personal Reflections</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Favorite Quote -->
+                    <div class="mb-4">
+                        <label for="{{ form.favorite_quote.id_for_label }}" class="form-label fw-semibold small">Resonant Quote</label>
+                        {{ form.favorite_quote }}
+                        {% if form.favorite_quote.errors %}<div class="text-danger small mt-1">{{ form.favorite_quote.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Featured Checkbox -->
+                    <div class="form-check mb-4">
+                        {{ form.is_featured }}
+                        <label class="form-check-label small fw-semibold" for="{{ form.is_featured.id_for_label }}">
+                            Feature this book on the Sanctuary homepage showcase
+                        </label>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="submit" class="btn btn-aesthetic-primary py-2 px-4">
+                            <i class="bi bi-check2"></i> {{ button_text }}
+                        </button>
+                        <a href="{% if action == 'edit' %}{% url 'book_detail' pk=book.pk %}{% else %}{% url 'library' %}{% endif %}" class="btn btn-aesthetic-outline py-2 px-3">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}The Library Sanctuary • AuraFolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row align-items-end g-4 mb-4">
+        <div class="col-md-8">
+            <span class="text-uppercase small fw-bold tracking-wider" style="color: var(--gold-hover); letter-spacing: 0.1em;">Archive & Repository</span>
+            <h1 class="display-5 fw-bold mt-1 mb-2">The Sanctuary Library</h1>
+            <p class="text-muted mb-0">Browse your curated tomes, filter by reading horizons, or discover by genre.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            {% if user.is_authenticated %}
+            <a href="{% url 'book_create' %}" class="btn btn-aesthetic-primary py-2 px-4">
+                <i class="bi bi-plus-lg"></i> Inscribe New Tome
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}?next={% url 'book_create' %}" class="btn btn-aesthetic-outline py-2 px-4">
+                <i class="bi bi-lock me-1"></i> Sign In to Add Tome
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: var(--radius-lg); background-color: #FFFFFF;">
+        <form method="GET" action="{% url 'library' %}" class="row g-3 align-items-center">
+            <!-- Search -->
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted" style="border-radius: var(--radius-sm) 0 0 var(--radius-sm); border-color: rgba(45, 36, 28, 0.15);">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control aesthetic-input border-start-0" placeholder="Search by title, author, quote, or tags..." style="border-radius: 0 var(--radius-sm) var(--radius-sm) 0;">
+                </div>
+            </div>
+
+            <!-- Genre Dropdown -->
+            <div class="col-6 col-md-3">
+                <select name="genre" class="form-select aesthetic-input" onchange="this.form.submit()">
+                    <option value="ALL">All Genres</option>
+                    {% for code, label in all_genres %}
+                        <option value="{{ code }}" {% if current_genre == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="col-6 col-md-3">
+                <select name="sort" class="form-select aesthetic-input" onchange="this.form.submit()">
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest Inscriptions</option>
+                    <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                    <option value="rating" {% if current_sort == 'rating' %}selected{% endif %}>Highest Rated (★)</option>
+                    <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title (A - Z)</option>
+                    <option value="author" {% if current_sort == 'author' %}selected{% endif %}>Author (A - Z)</option>
+                    <option value="pages" {% if current_sort == 'pages' %}selected{% endif %}>Page Count (Desc)</option>
+                </select>
+            </div>
+
+            <!-- Filter submit / reset -->
+            <div class="col-12 col-md-1 d-grid">
+                <button type="submit" class="btn btn-aesthetic-primary py-2 px-3">
+                    Filter
+                </button>
+            </div>
+            
+            <!-- Hidden status preservation -->
+            <input type="hidden" name="status" value="{{ current_status }}">
+        </form>
+
+        <hr class="my-3 opacity-10">
+
+        <!-- Status Filter Pills -->
+        <div class="filter-tabs pt-1">
+            <a href="?status=ALL{% if query %}&q={{ query }}{% endif %}{% if current_genre != 'ALL' %}&genre={{ current_genre }}{% endif %}&sort={{ current_sort }}" class="filter-pill {% if current_status == 'ALL' %}active{% endif %}">
+                All Tomes <span class="badge bg-secondary-subtle text-dark ms-1">{{ status_counts.ALL }}</span>
+            </a>
+            <a href="?status=READING{% if query %}&q={{ query }}{% endif %}{% if current_genre != 'ALL' %}&genre={{ current_genre }}{% endif %}&sort={{ current_sort }}" class="filter-pill {% if current_status == 'READING' %}active{% endif %}">
+                Currently Reading <span class="badge bg-warning-subtle text-dark ms-1">{{ status_counts.READING }}</span>
+            </a>
+            <a href="?status=COMPLETED{% if query %}&q={{ query }}{% endif %}{% if current_genre != 'ALL' %}&genre={{ current_genre }}{% endif %}&sort={{ current_sort }}" class="filter-pill {% if current_status == 'COMPLETED' %}active{% endif %}">
+                Finished <span class="badge bg-success-subtle text-dark ms-1">{{ status_counts.COMPLETED }}</span>
+            </a>
+            <a href="?status=WANT_TO_READ{% if query %}&q={{ query }}{% endif %}{% if current_genre != 'ALL' %}&genre={{ current_genre }}{% endif %}&sort={{ current_sort }}" class="filter-pill {% if current_status == 'WANT_TO_READ' %}active{% endif %}">
+                Want to Read <span class="badge bg-secondary-subtle text-dark ms-1">{{ status_counts.WANT_TO_READ }}</span>
+            </a>
+            <a href="?status=ON_HOLD{% if query %}&q={{ query }}{% endif %}{% if current_genre != 'ALL' %}&genre={{ current_genre }}{% endif %}&sort={{ current_sort }}" class="filter-pill {% if current_status == 'ON_HOLD' %}active{% endif %}">
+                On Hold <span class="badge bg-danger-subtle text-dark ms-1">{{ status_counts.ON_HOLD }}</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Filter Chips (if any) -->
+    {% if query or current_genre != 'ALL' or current_status != 'ALL' %}
+    <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+        <span class="small text-muted">Active filters:</span>
+        {% if query %}
+            <span class="badge bg-white text-dark border px-3 py-2 rounded-pill">
+                Query: “{{ query }}”
+            </span>
+        {% endif %}
+        {% if current_genre != 'ALL' %}
+            <span class="badge bg-white text-dark border px-3 py-2 rounded-pill">
+                Genre: {{ current_genre }}
+            </span>
+        {% endif %}
+        {% if current_status != 'ALL' %}
+            <span class="badge bg-white text-dark border px-3 py-2 rounded-pill">
+                Status: {{ current_status }}
+            </span>
+        {% endif %}
+        <a href="{% url 'library' %}" class="small text-danger text-decoration-none ms-2">
+            <i class="bi bi-x-circle"></i> Clear All
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Books Grid -->
+    <div class="row g-4">
+        {% for book in books %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="aesthetic-card h-100 d-flex flex-column book-card-item p-3 position-relative">
+                <a href="{% url 'book_detail' pk=book.pk %}" class="text-decoration-none">
+                    <div class="book-cover-frame mb-3">
+                        <div class="book-spine-gradient"></div>
+                        <img src="{{ book.cover }}" alt="{{ book.title }} Cover" loading="lazy">
+                    </div>
+                </a>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="status-pill {{ book.status_badge_class }}">
+                        {{ book.get_reading_status_display }}
+                    </span>
+                    {% if book.rating %}
+                    <div class="star-rating">
+                        {% for _ in book.filled_stars %}<i class="bi bi-star-fill"></i>{% endfor %}
+                        {% for _ in book.empty_stars %}<i class="bi bi-star star-empty"></i>{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="fw-bold mb-1 text-truncate" title="{{ book.title }}">
+                    <a href="{% url 'book_detail' pk=book.pk %}" class="text-dark text-decoration-none">
+                        {{ book.title }}
+                    </a>
+                </h5>
+                <div class="text-muted small mb-2">{{ book.author }}</div>
+
+                {% if book.favorite_quote %}
+                <div class="small fst-italic text-muted mb-2 text-truncate" style="font-size: 0.8rem;" title="{{ book.favorite_quote }}">
+                    “{{ book.favorite_quote }}”
+                </div>
+                {% elif book.aesthetic_tag %}
+                <div class="small fst-italic text-muted mb-2 text-truncate" style="font-size: 0.8rem;">
+                    <i class="bi bi-tag-fill me-1" style="color: var(--gold-primary);"></i>{{ book.aesthetic_tag }}
+                </div>
+                {% endif %}
+
+                <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-dark border small fw-normal">{{ book.get_genre_display }}</span>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical fs-5"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-1" style="border-radius: var(--radius-sm); font-size: 0.85rem;">
+                            <li>
+                                <a class="dropdown-item py-1 px-3 rounded-1" href="{% url 'book_detail' pk=book.pk %}">
+                                    <i class="bi bi-eye me-2 text-muted"></i> View Details
+                                </a>
+                            </li>
+                            {% if user.is_authenticated and book.user == user or user.is_staff or not book.user %}
+                            <li>
+                                <a class="dropdown-item py-1 px-3 rounded-1" href="{% url 'book_update' pk=book.pk %}">
+                                    <i class="bi bi-pencil me-2 text-muted"></i> Edit Record
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-1 px-3 rounded-1 text-danger" href="{% url 'book_delete' pk=book.pk %}">
+                                    <i class="bi bi-trash3 me-2"></i> Delete Tome
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 py-5 text-center">
+            <div class="p-5 bg-white rounded-4 shadow-sm max-w-500 mx-auto">
+                <i class="bi bi-journal-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                <h4 class="fw-bold">No tomes found</h4>
+                <p class="text-muted small mb-4">
+                    {% if query or current_genre != 'ALL' or current_status != 'ALL' %}
+                    No books matched your active search or filters. Try adjusting your parameters.
+                    {% else %}
+                    Your library is currently empty. Inscribe your very first book to begin the collection.
+                    {% endif %}
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    {% if query or current_genre != 'ALL' or current_status != 'ALL' %}
+                    <a href="{% url 'library' %}" class="btn btn-aesthetic-outline">Clear Filters</a>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'book_create' %}" class="btn btn-aesthetic-primary">Inscribe Book</a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-aesthetic-primary">Sign In to Add</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

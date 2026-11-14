@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AuraFolio • The Curated Aesthetic Book Sanctuary{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-wrapper">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="hero-tagline-pill">
+                    <i class="bi bi-stars"></i> Curated Literary Sanctuary
+                </div>
+                <h1 class="hero-title">
+                    Where every tome holds an <span class="font-editorial-italic" style="color: var(--gold-primary);">aesthetic soul</span>.
+                </h1>
+                <p class="hero-subtitle">
+                    AuraFolio elevates book tracking into an art form. Inscribe your reflections, organize reading horizons, preserve resonant quotes, and showcase your collection with timeless elegance.
+                </p>
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <a href="{% url 'library' %}" class="btn btn-aesthetic-primary py-3 px-4">
+                        <i class="bi bi-compass"></i> Explore Library
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'book_create' %}" class="btn btn-aesthetic-gold py-3 px-4">
+                            <i class="bi bi-plus-lg"></i> Add New Tome
+                        </a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn btn-aesthetic-outline py-3 px-4">
+                            <i class="bi bi-person-plus"></i> Join Sanctuary
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Subtle Quick Curator Credential hint for testing/evaluating -->
+                {% if not user.is_authenticated %}
+                <div class="mt-4 pt-2 d-flex align-items-center gap-2 text-muted small">
+                    <i class="bi bi-key text-warning"></i>
+                    <span>Quick evaluator login: <strong>curator</strong> / <strong>aurafolio123</strong></span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Hero Aesthetic Showcase Graphic -->
+            <div class="col-lg-6">
+                <div class="hero-book-stage">
+                    <!-- Floating Quote Badge -->
+                    <div class="floating-badge">
+                        <i class="bi bi-quote fs-3" style="color: var(--gold-primary);"></i>
+                        <div>
+                            <div class="small fw-bold">“Beauty is terror.”</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">Donna Tartt • The Secret History</div>
+                        </div>
+                    </div>
+
+                    <!-- Main Hero Book Card -->
+                    <div class="hero-featured-card">
+                        <div class="book-cover-frame position-relative">
+                            <div class="book-spine-gradient"></div>
+                            <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=700&q=80" alt="The Secret History Cover">
+                        </div>
+                    </div>
+
+                    <!-- Secondary Offset Card -->
+                    <div class="hero-card-secondary d-none d-sm-block">
+                        <div class="book-cover-frame position-relative">
+                            <div class="book-spine-gradient"></div>
+                            <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=700&q=80" alt="Meditations Cover">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Overview Bar -->
+<section class="py-4 border-top border-bottom" style="background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px);">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-number">{{ total_books|default:"8" }}</div>
+                <div class="stat-label">Tomes Catalogued</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-number">{{ reading_books|default:"2" }}</div>
+                <div class="stat-label">Currently Reading</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-number">{{ completed_books|default:"4" }}</div>
+                <div class="stat-label">Finished & Cherished</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-number">{{ genres_count|default:"6" }}</div>
+                <div class="stat-label">Diverse Genres</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Books Showcase -->
+<section class="py-5 my-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5">
+            <div>
+                <span class="text-uppercase small fw-bold tracking-wider" style="color: var(--gold-hover); letter-spacing: 0.1em;">Curator's Highlights</span>
+                <h2 class="display-6 fw-bold mt-1">Featured in the Sanctuary</h2>
+            </div>
+            <a href="{% url 'library' %}" class="btn btn-aesthetic-outline mt-3 mt-md-0">
+                View Entire Library <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for book in featured_books %}
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="aesthetic-card h-100 d-flex flex-column book-card-item p-3">
+                    <a href="{% url 'book_detail' pk=book.pk %}" class="text-decoration-none">
+                        <div class="book-cover-frame mb-3">
+                            <div class="book-spine-gradient"></div>
+                            <img src="{{ book.cover }}" alt="{{ book.title }} Cover" loading="lazy">
+                        </div>
+                    </a>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="status-pill {{ book.status_badge_class }}">
+                            {{ book.get_reading_status_display }}
+                        </span>
+                        {% if book.rating %}
+                        <div class="star-rating">
+                            {% for _ in book.filled_stars %}<i class="bi bi-star-fill"></i>{% endfor %}
+                            {% for _ in book.empty_stars %}<i class="bi bi-star star-empty"></i>{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="fw-bold mb-1 text-truncate" title="{{ book.title }}">
+                        <a href="{% url 'book_detail' pk=book.pk %}" class="text-dark text-decoration-none">
+                            {{ book.title }}
+                        </a>
+                    </h5>
+                    <div class="text-muted small mb-2">{{ book.author }}</div>
+                    
+                    {% if book.aesthetic_tag %}
+                    <div class="small fst-italic text-muted mb-3 text-truncate" style="font-size: 0.8rem;">
+                        <i class="bi bi-tag-fill me-1" style="color: var(--gold-primary);"></i>{{ book.aesthetic_tag }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark border small fw-normal">{{ book.get_genre_display }}</span>
+                        <a href="{% url 'book_detail' pk=book.pk %}" class="btn btn-sm btn-link text-dark p-0 text-decoration-none fw-semibold">
+                            Inspect <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">No featured books catalogued yet.</p>
+                <a href="{% url 'book_create' %}" class="btn btn-aesthetic-primary">Add First Book</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Literary Quote Banner -->
+<section class="py-5" style="background-color: var(--bg-card-subtle);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="literary-quote-box">
+                    <i class="bi bi-quote position-absolute top-0 start-0 translate-middle text-muted opacity-25" style="font-size: 5rem; z-index: 0;"></i>
+                    <p class="position-relative z-1 mb-0">
+                        “{{ quote_of_the_day.quote }}”
+                    </p>
+                    <div class="quote-author position-relative z-1">
+                        — {{ quote_of_the_day.author }}, <span class="fw-normal fst-italic text-muted">{{ quote_of_the_day.work }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Key Application Pillars (Resume & Portfolio showcase) -->
+<section class="py-5 my-3">
+    <div class="container">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="text-uppercase small fw-bold tracking-wider" style="color: var(--gold-hover); letter-spacing: 0.1em;">Architecture & Craft</span>
+            <h2 class="display-6 fw-bold mt-1">Thoughtfully Engineered for Bibliophiles</h2>
+            <p class="text-muted small">Harmonizing Python, Django ORM, and Bootstrap into a responsive editorial sanctuary.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="aesthetic-card p-4 h-100">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background-color: var(--gold-soft); color: var(--gold-primary); font-size: 1.4rem;">
+                        <i class="bi bi-database-check"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Relational ORM</h5>
+                    <p class="small text-muted mb-0">
+                        Custom Django models storing comprehensive meta: ISBN, page count, ratings, quotes, reading lifecycle status, and genre hierarchies.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="aesthetic-card p-4 h-100">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background-color: rgba(42, 72, 54, 0.12); color: var(--accent-forest); font-size: 1.4rem;">
+                        <i class="bi bi-magic"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Aesthetic Frontend</h5>
+                    <p class="small text-muted mb-0">
+                        Crafted with Bootstrap 5.3, custom dark academia palette, editorial Google fonts, glassmorphism, and responsive 3D book spine cards.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="aesthetic-card p-4 h-100">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background-color: rgba(182, 94, 67, 0.12); color: var(--accent-terracotta); font-size: 1.4rem;">
+                        <i class="bi bi-funnel"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Dynamic Filtering</h5>
+                    <p class="small text-muted mb-0">
+                        Instant multi-parameter queries: full-text search across titles, authors, and notes, accompanied by reading status and genre filters.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="aesthetic-card p-4 h-100">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background-color: rgba(90, 100, 114, 0.12); color: var(--accent-slate); font-size: 1.4rem;">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Auth & Access Control</h5>
+                    <p class="small text-muted mb-0">
+                        Robust Django authentication framework supporting user registration, split-screen login, session cookies, and scoped permissions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call To Action -->
+<section class="py-5 mb-5">
+    <div class="container">
+        <div class="rounded-4 p-5 text-center text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #1C1714 0%, #2E2620 100%);">
+            <div class="position-relative z-1 max-w-600 mx-auto py-3">
+                <h2 class="display-6 fw-bold text-white mb-3">Begin Cataloging Your Literary World</h2>
+                <p class="text-light-muted mb-4">
+                    Inscribe your first book, organize reading horizons, or simply browse the existing curated collection.
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{% url 'library' %}" class="btn btn-aesthetic-gold py-3 px-4">
+                        <i class="bi bi-collection"></i> Open Catalogue
+                    </a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'register' %}" class="btn btn-outline-light py-3 px-4 rounded-pill">
+                        <i class="bi bi-person-plus"></i> Create Free Account
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

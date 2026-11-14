@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}“{{ book.title }}” by {{ book.author }} • AuraFolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'landing' %}" class="text-decoration-none text-muted">Sanctuary</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'library' %}" class="text-decoration-none text-muted">Library</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">{{ book.title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Main Detail Card -->
+    <div class="card border-0 shadow-sm p-4 p-lg-5 mb-5" style="border-radius: var(--radius-xl); background-color: #FFFFFF;">
+        <div class="row g-5">
+            <!-- Book Cover & Quick Meta Column -->
+            <div class="col-lg-4 col-md-5 text-center">
+                <div class="position-sticky" style="top: 100px;">
+                    <div class="book-cover-frame mx-auto mb-4" style="max-width: 280px; box-shadow: var(--shadow-book);">
+                        <div class="book-spine-gradient"></div>
+                        <img src="{{ book.cover }}" alt="{{ book.title }} Cover" id="main-detail-cover">
+                    </div>
+
+                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                        <span class="status-pill {{ book.status_badge_class }}">
+                            <i class="bi bi-bookmark-fill me-1"></i>{{ book.get_reading_status_display }}
+                        </span>
+                        {% if book.is_featured %}
+                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 small">
+                            <i class="bi bi-star-fill text-warning me-1"></i> Featured
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if book.rating %}
+                    <div class="mb-4">
+                        <div class="star-rating fs-5">
+                            {% for _ in book.filled_stars %}<i class="bi bi-star-fill"></i>{% endfor %}
+                            {% for _ in book.empty_stars %}<i class="bi bi-star star-empty"></i>{% endfor %}
+                        </div>
+                        <div class="small text-muted mt-1">{{ book.get_rating_display }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Controls -->
+                    <div class="d-flex flex-column gap-2 max-w-280 mx-auto">
+                        {% if user.is_authenticated and book.user == user or user.is_staff or not book.user %}
+                        <a href="{% url 'book_update' pk=book.pk %}" class="btn btn-aesthetic-primary w-100">
+                            <i class="bi bi-pencil-square"></i> Refine Tome Records
+                        </a>
+                        <button type="button" class="btn btn-aesthetic-outline w-100 text-danger border-danger-subtle" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                            <i class="bi bi-trash3"></i> Remove Tome
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'library' %}" class="btn btn-link text-muted small text-decoration-none mt-2">
+                            <i class="bi bi-arrow-left"></i> Return to Library
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book Editorial Details Column -->
+            <div class="col-lg-8 col-md-7">
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill small fw-semibold">
+                        {{ book.get_genre_display }}
+                    </span>
+                    {% if book.aesthetic_tag %}
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill small">
+                        <i class="bi bi-tag-fill me-1 text-muted"></i>{{ book.aesthetic_tag }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h1 class="display-5 fw-bold mb-2">{{ book.title }}</h1>
+                <h4 class="text-muted fw-normal mb-4 font-serif">by <span class="text-dark">{{ book.author }}</span></h4>
+
+                {% if book.favorite_quote %}
+                <div class="literary-quote-box mb-4">
+                    <p class="mb-0">“{{ book.favorite_quote }}”</p>
+                    <div class="quote-author">— Excerpt from {{ book.title }}</div>
+                </div>
+                {% endif %}
+
+                <!-- Description / Reflection -->
+                <div class="mb-5">
+                    <h5 class="fw-bold mb-3 font-serif">Curator's Reflection & Synopsis</h5>
+                    {% if book.description %}
+                    <p class="text-muted lead fs-6" style="white-space: pre-line; line-height: 1.8;">
+                        {{ book.description }}
+                    </p>
+                    {% else %}
+                    <p class="text-muted fst-italic">No reflection has been recorded for this tome yet.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Metadata Grid -->
+                <div class="p-4 rounded-3 border" style="background-color: var(--bg-card-subtle);">
+                    <h6 class="text-uppercase small fw-bold tracking-wider mb-3" style="letter-spacing: 0.08em; color: var(--gold-hover);">Bibliographic Meta</h6>
+                    <div class="row g-3 small">
+                        <div class="col-6 col-sm-4">
+                            <div class="text-muted">Publication Year</div>
+                            <div class="fw-bold text-dark">{{ book.publication_year|default:"Not specified" }}</div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="text-muted">Total Pages</div>
+                            <div class="fw-bold text-dark">{% if book.pages %}{{ book.pages }} pages{% else %}Unknown{% endif %}</div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="text-muted">Language</div>
+                            <div class="fw-bold text-dark">{{ book.language|default:"English" }}</div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="text-muted">ISBN</div>
+                            <div class="fw-bold text-dark font-monospace">{{ book.isbn|default:"N/A" }}</div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="text-muted">Inscribed On</div>
+                            <div class="fw-bold text-dark">{{ book.created_at|date:"M d, Y" }}</div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="text-muted">Archived By</div>
+                            <div class="fw-bold text-dark">{{ book.user.username|default:"Sanctuary Archive" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Books in Same Genre -->
+    {% if related_books %}
+    <div class="mt-5">
+        <h4 class="fw-bold mb-4 font-serif">More from <span class="font-editorial-italic">{{ book.get_genre_display }}</span></h4>
+        <div class="row g-4">
+            {% for related in related_books %}
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="aesthetic-card h-100 p-3 d-flex gap-3 align-items-center">
+                    <div class="book-cover-frame flex-shrink-0" style="width: 70px; aspect-ratio: 2/3;">
+                        <img src="{{ related.cover }}" alt="{{ related.title }}">
+                    </div>
+                    <div class="overflow-hidden">
+                        <h6 class="fw-bold mb-1 text-truncate">
+                            <a href="{% url 'book_detail' pk=related.pk %}" class="text-dark text-decoration-none">
+                                {{ related.title }}
+                            </a>
+                        </h6>
+                        <div class="small text-muted mb-2 text-truncate">{{ related.author }}</div>
+                        <span class="status-pill {{ related.status_badge_class }}" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">
+                            {{ related.get_reading_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: var(--radius-lg);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-serif fw-bold text-danger" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Confirm Tome Removal
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-muted mb-0">
+                    Are you certain you wish to remove <strong>“{{ book.title }}”</strong> by {{ book.author }} from your library collection? This action cannot be reversed.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-aesthetic-outline py-2 px-3" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'book_delete' pk=book.pk %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger rounded-pill py-2 px-4 shadow-sm">
+                        <i class="bi bi-trash3 me-1"></i> Delete Tome
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

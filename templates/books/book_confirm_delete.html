@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirm Removal of “{{ book.title }}” • AuraFolio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card border-0 shadow-sm p-4 p-md-5 max-w-600 mx-auto text-center" style="border-radius: var(--radius-xl); background-color: #FFFFFF;">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 64px; height: 64px; background-color: rgba(182, 94, 67, 0.15); color: var(--accent-terracotta); font-size: 1.8rem;">
+            <i class="bi bi-trash3"></i>
+        </div>
+        
+        <h2 class="display-6 fw-bold mb-2 font-serif">Remove Tome?</h2>
+        <p class="text-muted mb-4">
+            Are you certain you wish to delete <strong>“{{ book.title }}”</strong> by {{ book.author }} from your collection? This action is permanent and cannot be undone.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'book_detail' pk=book.pk %}" class="btn btn-aesthetic-outline py-2 px-4">
+                    Keep Tome
+                </a>
+                <button type="submit" class="btn btn-danger rounded-pill py-2 px-4 shadow-sm">
+                    Yes, Delete Tome
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
